@@ -1,0 +1,26 @@
+{
+  "name": "desktopapp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redmacdev1988/DesktopApp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redmacdev1988/DesktopApp/issues"
+  },
+  "homepage": "https://github.com/redmacdev1988/DesktopApp#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^4.16.4",
+    "gulp": "^3.9.1",
+    "gulp-nodemon": "^2.4.1",
+    "nodemon": "^1.18.6",
+    "socket.io": "^2.2.0"
+  }
+}
