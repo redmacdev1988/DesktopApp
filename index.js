@@ -1,15 +1,27 @@
+var AVLTree = require('./avltree');
+var CONSTANTS = require("./constants");
 
-console.log('index.js - √ setting up the server');
+var users = AVLTree.CreateObject();
+console.log('index.js - √ users created');
+
+var rooms = AVLTree.CreateObject();
+console.log('index.js - √ rooms created');
 
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-
 app.get('/', function(req, res){
-  //res.send('<h1>Hello world</h1>');
   res.sendFile(__dirname + '/index.html');
 });
+
+
+io.on('connect', onConnect);
+
+function onConnect(socket) {
+    // remember to flatten the avl tree
+    socket.emit('init', users, rooms);
+}
 
 // the io object listens for 'connection' events
 // when it happens, we know that a client has connected to us.
@@ -19,13 +31,6 @@ app.get('/', function(req, res){
 // It will always give us a callback for what we want to do after the event.
 io.on('connection', function(socket) {
     
-    // some time for the request from html to get here to the server
-
-    console.log(new Date().getTime()); // 3
-    console.log('a user connected');
-    //console.log(socket);
-    console.log(new Date().getTime()); // 4
-
     // the socket object (passed in parameter) for that client will listen for a 'disconnect' event.
     // when it disconnects, it'll hit this callback.
     socket.on('disconnect', function() {
@@ -39,12 +44,20 @@ io.on('connection', function(socket) {
         io.emit('chat message', msg); // send msg to everyone
     });
 
+    socket.on(CONSTANTS.SIGN_IN, function(userID){
+        console.log(userID + ' wants to sign in...');
+        users.insertAndBalance(parseInt(userID, 10));
+        io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in');
+    });
 
+    socket.on(CONSTANTS.INIT, function() {
 
+        console.log('will return all users');
+
+    })
 });
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-console.log("index.js - √ end");
