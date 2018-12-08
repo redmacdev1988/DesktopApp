@@ -18,8 +18,8 @@ app.get('/', function(req, res){
 
 // when a client connect, we give that client users and rooms data
 io.on('connect', function(socket) {
-    console.log(' connect ! ');
-    socket.emit('init', users.flatten(), rooms.flatten());
+    //console.log(' connect ! ');
+    //socket.emit('init', users.flatten(), rooms.flatten());
 });
 
 
@@ -30,6 +30,20 @@ io.on('connect', function(socket) {
 // the socket object is important, as it will listen for other messages.
 // It will always give us a callback for what we want to do after the event.
 io.on('connection', function(socket) {
+
+    socket.on('user-exists', function(userId) {
+        console.log(users.flatten());
+
+        console.log('check if ' + userId + '  exists');
+        var result = users.search(userId);
+        if(result) {
+            console.log('found ' + result.data);
+            socket.emit('hohoho', true, users.flatten());
+        } else {
+            console.log('not found....! ');
+            socket.emit('hohoho', false, users.flatten()); // this will only send back the socket that is requesting
+        }
+    });
 
     socket.on('user-disconnect', function(userId){
         console.log(userId + ' wants to disconnect');
@@ -54,9 +68,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on(CONSTANTS.SIGN_IN, function(userID){
-        console.log(userID + ' wants to sign in...');
-        console.log(new String(userID));
-
+        console.log('(+) signing in ' + userID);
         users.insertAndBalance(new String(userID));
         console.log(users.flatten());
         io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());

@@ -77,16 +77,25 @@
             console.log(' √ web page ready..');
 
             var socket = io();
+            userId = localStorage.getItem("userId");
+            console.log('local storage: ' + userId);
 
-            var fakerator = Fakerator();
-            userId = fakerator.names.name();
-            //var user = fakerator.entity.user();
-
-            socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
+            if (!userId) {
+              var fakerator = Fakerator();
+              userId = fakerator.names.name();
+              localStorage.setItem("userId", userId);
+                
+              //var user = fakerator.entity.user();
+              socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
+            } else {
+              console.log('check with server if ' + userId + ' is signed in');
+              socket.emit('user-exists', userId);
+            }
             
             $('#disconnect').click(function() {
               console.log(userId + ': disconnect me!');
               socket.emit('user-disconnect', userId);
+              localStorage.removeItem("userId");
             });
 
             $('form').submit(function() {
@@ -95,12 +104,33 @@
               return false;
             });
 
+            socket.on('hohoho', function(isFound, users) {
+              console.log('received hohoho');
+              console.log(isFound);
+              console.log(users);
+
+              if (isFound) {
+                console.log('index.html - server has found this user. Lets welcome it.');
+                $('#welcome').text('welcome, ' + userId); 
+                $('#users').empty();
+                for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+
+              } else { // not found
+                var fakerator = Fakerator();
+                userId = fakerator.names.name();
+                localStorage.setItem("userId", userId);
+                  
+                //var user = fakerator.entity.user();
+                socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
+              }
+            });
+
             socket.on('disconnect', function() {
               console.log('index.html: disconnect');
             });
 
             socket.on('user-disconnected', function(user, users) {
-              console.log(user + ' has just disconnectedd');
+              console.log(user + ' has just disconnected');
               $('#users').empty();
               for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
             })
@@ -126,6 +156,7 @@
             });
 
             socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
+              console.log('init');
               $('#welcome').text('welcome, ' + userId); 
               $('#users').empty();
               for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
