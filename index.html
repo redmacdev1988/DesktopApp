@@ -10,24 +10,17 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
      
-      
       html, body {
         font: 13px Helvetica, Arial; 
         height: 100%; margin: 0;
       }
-
-      .box {
-       
-      }
-
-
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       
       #messages { 
-        list-style-type: none; margin: 0; padding: 0;
-        width:80%; 
+        list-style-type: none; margin: 25px; padding: 0;
+        width:75%; 
         float: left;
       }
 
@@ -41,16 +34,19 @@
 
     </style>
 
+  
+
     <title>Ricky's Chatroom</title>
   </head>
   <body>
+      <button type="button" id="disconnect" class="btn btn-danger">disconnect</button>
 
     <div class="box">
-      <ul id="messages"></ul>
+      <ul id="messages" class="list-group list-group-flush"></ul>
 
       <div class="content userlist">
-        <h5>users</h5>
-        <ul id="users"></ul>
+        <h4 id="welcome">Welcome!</h4>
+        <ul id="users" class="list-group"></ul>
       </div>
 
       <form action="">
@@ -60,6 +56,8 @@
 
     <script src="socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://rawgit.com/icebob/fakerator/master/dist/fakerator.js"></script>
+ 
     <script>
 
         var CLIENT_CONSTS = {
@@ -69,35 +67,68 @@
 
         var userId;
 
+        // TODOs
+        // sign out (use local storage to store username when users have exited their browser via cancel.)
+        // do not sign them out. 
+
+        // implement admin functionality
+
         $(document).ready(function() { 
-            console.log(' √ web page ready');
+            console.log(' √ web page ready..');
+
             var socket = io();
 
-            var min=1; var max=99;  
-            userId=Math.floor(Math.random() * (+max - +min)) + +min; 
+            var fakerator = Fakerator();
+            userId = fakerator.names.name();
+            //var user = fakerator.entity.user();
 
-            console.log('emitting browser user id: ' + userId);
             socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
             
+            $('#disconnect').click(function() {
+              console.log(userId + ': disconnect me!');
+              socket.emit('user-disconnect', userId);
+            });
+
             $('form').submit(function() {
-              socket.emit('chat message', $('#m').val());
+              socket.emit('chat message', $('#m').val(), userId);
               $('#m').val(''); // clear input
               return false;
             });
 
-            socket.on('chat message', function(msg){
-              $('#messages').append($('<li>').text(msg));
+            socket.on('disconnect', function() {
+              console.log('index.html: disconnect');
             });
 
-            socket.on(CLIENT_CONSTS.SIGN_IN, function(user, msg) {
-              console.log('received from server with user and msg' + user + ', ' + msg);
-              $('#messages').append($('<li>').text(msg));
-              $('#users').append($('<li>').text(user));
+            socket.on('user-disconnected', function(user, users) {
+              console.log(user + ' has just disconnectedd');
+              $('#users').empty();
+              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+            })
+
+            socket.on('info', function(msg, user) { 
+              $('#messages').append($('<li style="font-style: italic" class="list-group-item">').text(msg));
             });
 
-            socket.on(CLIENT_CONSTS.INIT, function(users, rooms){
-              console.log(users);
-              console.log(rooms);
+            socket.on('chat message', function(msg, user) {
+              var style;
+              if (user == userId) {
+                style = 'style="color: orange; border-left: 2px solid red;"';
+              }
+
+              $('#messages').append($('<li ' + style + ' class="list-group-item">').text(user + ': ' + msg));
+            });
+
+            
+            socket.on(CLIENT_CONSTS.SIGN_IN, function(user, msg, users) {
+              $('#messages').append($('<li style="font-style: italic" class="list-group-item">').text(msg));
+              $('#users').empty();
+              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+            });
+
+            socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
+              $('#welcome').text('welcome, ' + userId); 
+              $('#users').empty();
+              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
             });
 
         });

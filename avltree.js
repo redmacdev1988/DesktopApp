@@ -345,7 +345,6 @@ function remove(number, head) {
   //console.log("---------- Let's remove: " + number + " -----------------");
   if (head) {
       if (head.data == number && rightChildOnly(head)) {
-          //console.log("Removing " + number + ", right child only");
           var temp = head; head = head.right; temp.delete();
           return head;
       }
@@ -375,7 +374,6 @@ module.exports = class AVLTree {
         this._head = null; // root reference for this instance
         var _numOfStepsForSearch = 0;
         this.getNumOfStepsForSearch = function() { return _numOfStepsForSearch; }
-        //console.log(" Constructed AVLTree class ");
     }
 
     getHead() {return this._head;}
@@ -424,47 +422,31 @@ module.exports = class AVLTree {
         }
         if (singleNodeLeft(node)) { this._head = node; }
 
-        //console.log("◊ After removing value: " + value + ", let's update balance and height");
-
         node = updateBalanceAndHeightValuesForTree(node); // THIS IS NEEDED
-
         var self = this; // for accessing context inside a callback
 
         while (checkForBalanceness(node) == false) { // while its un balanced, we find bad node.
             findBadNode(node, null, function(badNode, parentNode) {
-                //console.log("(X) FOUND BAD NODE AT: " + badNode.data);
-
                 if (parentNode) {
-                    //console.log("nodeParent exists, PARENT NODE IS: " + parentNode.data);
                     if (parentNode.left === badNode) {
-                        //console.log(parentNode.data + " left points to " + badNode.data);
                         parentNode.left = balanceNode(badNode);
                     } else {
                         parentNode.right = balanceNode(badNode);
                     }
-                } else { // nodeParent does not exist, which means we are at ROOT!
-                    //console.log("No nodeParent, (X) FOUND BAD NODE AT: " + badNode.data);
+                } else { 
                     self._head = balanceNode(badNode);
                 }
-
-                //console.log("!! Anytime you do rotation in the tree AFTER A REMOVAL, you must update balance and height of WHOLE tree !!");
                 self._head = updateBalanceAndHeightValuesForTree(self._head);
                 checkForBalanceness(self._head);
             }); // findBadNode
         } // while
-
-        //console.log("All done");
-        //console.log(this._head.data);
     } //removeAndBalance
 
 
     // PUBLIC
     inOrderPrint(node) {
-      //console.log(`call inOrderPrint`)
-        if (node === null) {
-          //console.log(`inOrderPrint: empty tree`);
-          return;
-        }
+      
+        if (node === null) {return;}
 
         this.inOrderPrint(node.left);
         if (this._head == node) {
@@ -492,6 +474,19 @@ module.exports = class AVLTree {
         } else {
           console.log("Nothing to display. Empty Tree")
         }
+    }
+
+    flatten() {
+        var array = [];
+        this.flattenToArray(this._head, array);
+        return array;
+    }
+
+    flattenToArray(node, array) {
+        if (node === null) {return;}
+        this.flattenToArray(node.left, array);
+        array.push(node.data);
+        this.flattenToArray(node.right, array);
     }
 
 } // end of AVLTree

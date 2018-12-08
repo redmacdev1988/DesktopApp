@@ -18,6 +18,7 @@
   "description": "",
   "dependencies": {
     "express": "^4.16.4",
+    "fakerator": "^0.3.0",
     "gulp": "^3.9.1",
     "gulp-nodemon": "^2.4.1",
     "nodemon": "^1.18.6",
