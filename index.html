@@ -35,7 +35,6 @@
     </style>
 
   
-
     <title>Ricky's Chatroom</title>
   </head>
   <body>
@@ -50,14 +49,14 @@
       </div>
 
       <form action="">
-        <input id="m" autocomplete="off" /><button>Send</button>
+        <input id="textInputBox" autocomplete="off" /><button>Send</button>
       </form>
     </div>
 
     <script src="socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://rawgit.com/icebob/fakerator/master/dist/fakerator.js"></script>
- 
+    
     <script>
 
         var CLIENT_CONSTS = {
@@ -65,101 +64,102 @@
           INIT : 'init'
         };
 
-        var userId;
+        var _userId;
+
+        function refreshUserListWithNewData(usersIdSel, usersArray) {
+          $(usersIdSel).empty();
+          for (var i = 0; i < usersArray.length; i++) { $(usersIdSel).append($('<li class="list-group-item">').text(usersArray[i])); }
+        }
+
+        function showChatMsgAsNotification(messagesIdSel, message) {
+          $(messagesIdSel).append($('<li style="font-style: italic" class="list-group-item">').text(message));
+        }
+
+        function showChatMsgAsStandard(messageIdSel, message, userIdThatSentTheMsg, currentUserId) {
+          var style;
+          if (userIdThatSentTheMsg == currentUserId) { style = 'style="color: orange; border-left: 2px solid red;"'; } 
+          $(messageIdSel).append($('<li ' + style + ' class="list-group-item">').text(userIdThatSentTheMsg + ': ' + message));
+        }
+
+        function initWelcomeText(welcomeIdSel, theUserId) {
+          $(welcomeIdSel).text('welcome, ' + theUserId); 
+        }
+
+        function emptyInputBox() {
+          $('#textInputBox').val(''); // clear input
+        }
+
+        function doesPreviousUserExist(socket) {
+          var existingUserId = localStorage.getItem("userId");
+          if (!existingUserId) {
+            var fakerator = Fakerator();
+            existingUserId = fakerator.names.name();
+            localStorage.setItem("userId", existingUserId);
+            socket.emit(CLIENT_CONSTS.SIGN_IN, existingUserId);
+          } else {
+            socket.emit('user-exists', existingUserId);
+          }
+          return existingUserId;
+        }
 
         // TODOs
-        // sign out (use local storage to store username when users have exited their browser via cancel.)
-        // do not sign them out. 
-
         // implement admin functionality
 
         $(document).ready(function() { 
-            console.log(' √ web page ready..');
+            console.log('√ web page ready..');
 
             var socket = io();
-            userId = localStorage.getItem("userId");
-            console.log('local storage: ' + userId);
-
-            if (!userId) {
-              var fakerator = Fakerator();
-              userId = fakerator.names.name();
-              localStorage.setItem("userId", userId);
-                
-              //var user = fakerator.entity.user();
-              socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
-            } else {
-              console.log('check with server if ' + userId + ' is signed in');
-              socket.emit('user-exists', userId);
-            }
+            _userId = doesPreviousUserExist(socket);
             
             $('#disconnect').click(function() {
-              console.log(userId + ': disconnect me!');
-              socket.emit('user-disconnect', userId);
+              socket.emit('user-disconnect', _userId);
               localStorage.removeItem("userId");
             });
 
             $('form').submit(function() {
-              socket.emit('chat message', $('#m').val(), userId);
-              $('#m').val(''); // clear input
+              socket.emit('chat message', $('#textInputBox').val(), _userId);
+              emptyInputBox();
               return false;
             });
 
             socket.on('hohoho', function(isFound, users) {
-              console.log('received hohoho');
-              console.log(isFound);
-              console.log(users);
-
               if (isFound) {
-                console.log('index.html - server has found this user. Lets welcome it.');
-                $('#welcome').text('welcome, ' + userId); 
-                $('#users').empty();
-                for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
-
+                initWelcomeText('#welcome', _userId);
+                refreshUserListWithNewData('#users', users);
               } else { // not found
                 var fakerator = Fakerator();
                 userId = fakerator.names.name();
-                localStorage.setItem("userId", userId);
-                  
-                //var user = fakerator.entity.user();
-                socket.emit(CLIENT_CONSTS.SIGN_IN, userId);
+                localStorage.setItem("userId", _userId);
+                socket.emit(CLIENT_CONSTS.SIGN_IN, _userId);
               }
             });
 
             socket.on('disconnect', function() {
-              console.log('index.html: disconnect');
+                console.log('index.html: disconnect');
+                //window.location.href = "./start.html";
             });
 
             socket.on('user-disconnected', function(user, users) {
               console.log(user + ' has just disconnected');
-              $('#users').empty();
-              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+              refreshUserListWithNewData('#users', users);
             })
 
             socket.on('info', function(msg, user) { 
-              $('#messages').append($('<li style="font-style: italic" class="list-group-item">').text(msg));
+              showChatMsgAsNotification('#messages', msg);
             });
 
             socket.on('chat message', function(msg, user) {
-              var style;
-              if (user == userId) {
-                style = 'style="color: orange; border-left: 2px solid red;"';
-              }
-
-              $('#messages').append($('<li ' + style + ' class="list-group-item">').text(user + ': ' + msg));
+              showChatMsgAsStandard('#messages', msg, user, _userId);
             });
-
             
             socket.on(CLIENT_CONSTS.SIGN_IN, function(user, msg, users) {
-              $('#messages').append($('<li style="font-style: italic" class="list-group-item">').text(msg));
-              $('#users').empty();
-              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+              refreshUserListWithNewData('#users', users);
+              showChatMsgAsNotification('#messages', msg);
             });
 
             socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
-              console.log('init');
-              $('#welcome').text('welcome, ' + userId); 
-              $('#users').empty();
-              for (var i = 0; i < users.length; i++) { $('#users').append($('<li class="list-group-item">').text(users[i])); }
+              initWelcomeText('#welcome', userId);
+              refreshUserListWithNewData('#users', users);
             });
 
         });

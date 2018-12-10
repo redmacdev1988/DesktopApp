@@ -16,12 +16,6 @@ app.get('/', function(req, res){
   //res.sendFile(__dirname + '/start.html');
 });
 
-// when a client connect, we give that client users and rooms data
-io.on('connect', function(socket) {
-    //console.log(' connect ! ');
-    //socket.emit('init', users.flatten(), rooms.flatten());
-});
-
 
 // the io object listens for 'connection' events
 // when it happens, we know that a client has connected to us.
@@ -55,9 +49,6 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function(socket) {
         console.log('index.js - disconnect');
-       
-        //io.emit('myCustomEvent', {customEvent: 'Custom Message'})
-        //console.log('Socket disconnected: ' + _id);
     });
 
     // the socket object (passed in parameter) for that client will listen for a 'chat message' mevent.
@@ -73,8 +64,8 @@ io.on('connection', function(socket) {
         console.log(users.flatten());
         io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
     });
-
 });
+
 
 http.listen(3000, function(){
   console.log('listening on *:3000');

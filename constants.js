@@ -1,4 +1,5 @@
 module.exports = {
+//var CONST = {
     PREORDER: 1,
     INORDER: 2,
     POSTORDER: 3,
@@ -8,4 +9,4 @@ module.exports = {
     RIGHT: 7,
     SIGN_IN : 'sign in',
     INIT: 'init'
-  };
+};
