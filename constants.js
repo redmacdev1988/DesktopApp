@@ -1,5 +1,4 @@
 module.exports = {
-//var CONST = {
     PREORDER: 1,
     INORDER: 2,
     POSTORDER: 3,

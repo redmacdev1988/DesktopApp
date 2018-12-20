@@ -57,6 +57,7 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://rawgit.com/icebob/fakerator/master/dist/fakerator.js"></script>
     
+    
     <script>
 
         var CLIENT_CONSTS = {
@@ -64,9 +65,8 @@
           INIT : 'init'
         };
 
-        var _userId;
-
         function refreshUserListWithNewData(usersIdSel, usersArray) {
+          console.log(usersArray);
           $(usersIdSel).empty();
           for (var i = 0; i < usersArray.length; i++) { $(usersIdSel).append($('<li class="list-group-item">').text(usersArray[i])); }
         }
@@ -102,13 +102,12 @@
           return existingUserId;
         }
 
-        // TODOs
-        // implement admin functionality
 
         $(document).ready(function() { 
-            console.log('√ web page ready..');
 
-            var socket = io();
+            var _userId;
+
+            var sockzt = io();
             _userId = doesPreviousUserExist(socket);
             
             $('#disconnect').click(function() {
@@ -122,13 +121,14 @@
               return false;
             });
 
-            socket.on('hohoho', function(isFound, users) {
+            socket.on('is-user-found', function(isFound, users) {
+              console.log('client: is-user-found, ' + isFound);
               if (isFound) {
                 initWelcomeText('#welcome', _userId);
                 refreshUserListWithNewData('#users', users);
-              } else { // not found
+              } else { 
                 var fakerator = Fakerator();
-                userId = fakerator.names.name();
+                _userId = fakerator.names.name();
                 localStorage.setItem("userId", _userId);
                 socket.emit(CLIENT_CONSTS.SIGN_IN, _userId);
               }
@@ -136,12 +136,14 @@
 
             socket.on('disconnect', function() {
                 console.log('index.html: disconnect');
-                //window.location.href = "./start.html";
+                window.location.href = "http://www.google.com";
             });
 
             socket.on('user-disconnected', function(user, users) {
-              console.log(user + ' has just disconnected');
               refreshUserListWithNewData('#users', users);
+              if (user == _userId) {
+                window.location.href = "http://www.google.com";
+              }
             })
 
             socket.on('info', function(msg, user) { 
@@ -155,10 +157,11 @@
             socket.on(CLIENT_CONSTS.SIGN_IN, function(user, msg, users) {
               refreshUserListWithNewData('#users', users);
               showChatMsgAsNotification('#messages', msg);
+              initWelcomeText('#welcome', user);
             });
 
             socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
-              initWelcomeText('#welcome', userId);
+              initWelcomeText('#welcome', _userId);
               refreshUserListWithNewData('#users', users);
             });
 

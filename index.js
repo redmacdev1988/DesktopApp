@@ -1,11 +1,8 @@
-var AVLTree = require('./avltree');
+
 var CONSTANTS = require("./constants");
 
-var users = AVLTree.CreateObject();
+var users = require('./LinkedListHashTable');
 console.log('index.js - √ users created');
-
-var rooms = AVLTree.CreateObject();
-console.log('index.js - √ rooms created');
 
 var app = require('express')();
 var http = require('http').Server(app);
@@ -16,7 +13,9 @@ app.get('/', function(req, res){
   //res.sendFile(__dirname + '/start.html');
 });
 
-
+function isString(data) {
+    return ((typeof data === 'string') ||  (data instanceof String));
+}
 // the io object listens for 'connection' events
 // when it happens, we know that a client has connected to us.
 // the callback gives us the socket object so we can see the details.
@@ -26,23 +25,21 @@ app.get('/', function(req, res){
 io.on('connection', function(socket) {
 
     socket.on('user-exists', function(userId) {
-        console.log(users.flatten());
-
-        console.log('check if ' + userId + '  exists');
-        var result = users.search(userId);
-        if(result) {
-            console.log('found ' + result.data);
-            socket.emit('hohoho', true, users.flatten());
-        } else {
-            console.log('not found....! ');
-            socket.emit('hohoho', false, users.flatten()); // this will only send back the socket that is requesting
-        }
+        console.log('USER-EXISTS ----------------> ');
+        var isFound = users.search(userId) ? true : false;
+        console.log('server: user-exists, ' + isFound);
+        socket.emit('is-user-found', isFound, users.flatten());
     });
 
     socket.on('user-disconnect', function(userId){
-        console.log(userId + ' wants to disconnect');
+        console.log('USER-DISCONNECT ----------------> ');
         socket.disconnect(true);
-        users.removeAndBalance(userId);
+        if (users.remove(userId)) {
+            console.log('server removed user ' + userId);
+        } else {
+            console.log('uh oh, user ' + userId + ' was not removed');
+        }
+
         io.emit('info', userId + ' has left the room.', userId); // send msg to everyone
         io.emit('user-disconnected', userId, users.flatten());
     });
@@ -54,15 +51,27 @@ io.on('connection', function(socket) {
     // the socket object (passed in parameter) for that client will listen for a 'chat message' mevent.
     // when it gets it, we simply get the string msg.
     socket.on('chat message', function(msg, userId) {
-        console.log(userId + ': ' + msg);
+        console.log('emit ' + msg + ' from ' + userId + ' ... to every client');
         io.emit('chat message', msg, userId); // send msg to everyone
     });
 
     socket.on(CONSTANTS.SIGN_IN, function(userID){
-        console.log('(+) signing in ' + userID);
-        users.insertAndBalance(new String(userID));
-        console.log(users.flatten());
-        io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
+        console.log('server: sign in user ' + userID);
+
+        if (isString(userID)) {
+            var searchResult = users.search(userID);
+            if (searchResult) {
+                console.log('(+) signing in ' + userID);
+                io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
+            } else {
+                console.log(userID + ', does not exist..., we will insert ' + userID);
+                users.insert(new String(userID));
+                console.log('(+) signing in ' + userID);
+                io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
+            }
+        }
+
+       
     });
 });
 
