@@ -29,7 +29,7 @@ io.on('connection', function(socket) {
 
     socket.on('user-exists', function(userId) {
         console.log('USER-EXISTS ----------------> ');
-        var isFound = users.searchUser(userId) ? true : false;
+        var isFound = users.searchUserByUserName(userId) ? true : false;
         console.log('server: user-exists, ' + isFound);
         socket.emit('is-user-found', isFound, users.flatten());
     });
@@ -37,12 +37,11 @@ io.on('connection', function(socket) {
     socket.on('user-disconnect', function(userId){
         console.log('USER-DISCONNECT ----------------> ');
         socket.disconnect(true);
-        if (users.remove(userId)) {
+        if (users.removeUserByUserName(userId)) {
             console.log('server removed user ' + userId);
         } else {
             console.log('uh oh, user ' + userId + ' was not removed');
         }
-
         io.emit('info', userId + ' has left the room.', userId); // send msg to everyone
         io.emit('user-disconnected', userId, users.flatten());
     });
@@ -60,19 +59,13 @@ io.on('connection', function(socket) {
 
     socket.on(CONSTANTS.SIGN_IN, function(userID){
         console.log('server: sign in user ' + userID);
-
         if (isString(userID)) {
-            var searchResult = users.searchUser(userID);
-            console.log(searchResult);
-
+            var searchResult = users.searchUserByUserName(userID);
             if (searchResult) {
                 console.log('(+) signing in ' + userID);
                 io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
             } else {
                 console.log(userID + ', does not exist..., we will insert ' + userID);
-                
-                //userFactory.user.createUser(new String(userID), "my pwd");
-
                 var aUser = userFactory.user.createUser(new String(userID), "my pwd");
                 users.insertUser(aUser);
                 console.log('(+) signing in ' + userID);
