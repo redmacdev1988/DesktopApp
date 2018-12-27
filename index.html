@@ -57,56 +57,51 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://rawgit.com/icebob/fakerator/master/dist/fakerator.js"></script>
     
-    
     <script>
+    var CLIENT_CONSTS = {
+      SIGN_IN : 'sign in',
+      INIT : 'init'
+    };
 
-        var CLIENT_CONSTS = {
-          SIGN_IN : 'sign in',
-          INIT : 'init'
-        };
+    function refreshUserListWithNewData(usersIdSel, usersArray) {
+      $(usersIdSel).empty();
+      for (var i = 0; i < usersArray.length; i++) { $(usersIdSel).append($('<li class="list-group-item">').text(usersArray[i])); }
+    }
 
-        function refreshUserListWithNewData(usersIdSel, usersArray) {
-          console.log(usersArray);
-          $(usersIdSel).empty();
-          for (var i = 0; i < usersArray.length; i++) { $(usersIdSel).append($('<li class="list-group-item">').text(usersArray[i])); }
-        }
+    function showChatMsgAsNotification(messagesIdSel, message) {
+      $(messagesIdSel).append($('<li style="font-style: italic" class="list-group-item">').text(message));
+    }
 
-        function showChatMsgAsNotification(messagesIdSel, message) {
-          $(messagesIdSel).append($('<li style="font-style: italic" class="list-group-item">').text(message));
-        }
+    function showChatMsgAsStandard(messageIdSel, message, userIdThatSentTheMsg, currentUserId) {
+      var style;
+      if (userIdThatSentTheMsg == currentUserId) { style = 'style="color: orange; border-left: 2px solid red;"'; } 
+      $(messageIdSel).append($('<li ' + style + ' class="list-group-item">').text(userIdThatSentTheMsg + ': ' + message));
+    }
 
-        function showChatMsgAsStandard(messageIdSel, message, userIdThatSentTheMsg, currentUserId) {
-          var style;
-          if (userIdThatSentTheMsg == currentUserId) { style = 'style="color: orange; border-left: 2px solid red;"'; } 
-          $(messageIdSel).append($('<li ' + style + ' class="list-group-item">').text(userIdThatSentTheMsg + ': ' + message));
-        }
+    function initWelcomeText(welcomeIdSel, theUserId) {
+      $(welcomeIdSel).text('welcome, ' + theUserId); 
+    }
 
-        function initWelcomeText(welcomeIdSel, theUserId) {
-          $(welcomeIdSel).text('welcome, ' + theUserId); 
-        }
+    function emptyInputBox() {
+      $('#textInputBox').val(''); 
+    }
 
-        function emptyInputBox() {
-          $('#textInputBox').val(''); // clear input
-        }
-
-        function doesPreviousUserExist(socket) {
-          var existingUserId = localStorage.getItem("userId");
-          if (!existingUserId) {
-            var fakerator = Fakerator();
-            existingUserId = fakerator.names.name();
-            localStorage.setItem("userId", existingUserId);
-            socket.emit(CLIENT_CONSTS.SIGN_IN, existingUserId);
-          } else {
-            socket.emit('user-exists', existingUserId);
-          }
-          return existingUserId;
-        }
+    function doesPreviousUserExist(socket) {
+      var existingUserId = localStorage.getItem("userId");
+      if (!existingUserId) {
+        var fakerator = Fakerator();
+        existingUserId = fakerator.names.name();
+        localStorage.setItem("userId", existingUserId);
+        socket.emit(CLIENT_CONSTS.SIGN_IN, existingUserId);
+      } else {
+        socket.emit('user-exists', existingUserId);
+      }
+      return existingUserId;
+    }
 
 
         $(document).ready(function() { 
-
             var _userId;
-
             var socket = io();
             _userId = doesPreviousUserExist(socket);
             
@@ -122,20 +117,21 @@
             });
 
             socket.on('is-user-found', function(isFound, users) {
-              console.log('client: is-user-found, ' + isFound);
               if (isFound) {
                 initWelcomeText('#welcome', _userId);
                 refreshUserListWithNewData('#users', users);
               } else { 
+
+                // create the fake names here
                 var fakerator = Fakerator();
                 _userId = fakerator.names.name();
                 localStorage.setItem("userId", _userId);
                 socket.emit(CLIENT_CONSTS.SIGN_IN, _userId);
+
               }
             });
 
             socket.on('disconnect', function() {
-                console.log('index.html: disconnect');
                 window.location.href = "http://www.google.com";
             });
 

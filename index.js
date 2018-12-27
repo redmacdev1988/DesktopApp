@@ -13,6 +13,9 @@ app.get('/', function(req, res){
   //res.sendFile(__dirname + '/start.html');
 });
 
+var userFactory = require('./User');
+
+
 function isString(data) {
     return ((typeof data === 'string') ||  (data instanceof String));
 }
@@ -26,7 +29,7 @@ io.on('connection', function(socket) {
 
     socket.on('user-exists', function(userId) {
         console.log('USER-EXISTS ----------------> ');
-        var isFound = users.search(userId) ? true : false;
+        var isFound = users.searchUser(userId) ? true : false;
         console.log('server: user-exists, ' + isFound);
         socket.emit('is-user-found', isFound, users.flatten());
     });
@@ -59,19 +62,24 @@ io.on('connection', function(socket) {
         console.log('server: sign in user ' + userID);
 
         if (isString(userID)) {
-            var searchResult = users.search(userID);
+            var searchResult = users.searchUser(userID);
+            console.log(searchResult);
+
             if (searchResult) {
                 console.log('(+) signing in ' + userID);
                 io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
             } else {
                 console.log(userID + ', does not exist..., we will insert ' + userID);
-                users.insert(new String(userID));
+                
+                //userFactory.user.createUser(new String(userID), "my pwd");
+
+                var aUser = userFactory.user.createUser(new String(userID), "my pwd");
+                users.insertUser(aUser);
                 console.log('(+) signing in ' + userID);
+                users.print();
                 io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
             }
         }
-
-       
     });
 });
 
