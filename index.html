@@ -116,18 +116,15 @@
               return false;
             });
 
-            socket.on('is-user-found', function(isFound, users) {
-              if (isFound) {
-                initWelcomeText('#welcome', _userId);
+            socket.on('is-user-found', function(foundUser, users) {
+              if (foundUser) {
+                initWelcomeText('#welcome' , foundUser.data.name + ' ('+ foundUser.data.userType + ')');
                 refreshUserListWithNewData('#users', users);
               } else { 
-
-                // create the fake names here
                 var fakerator = Fakerator();
                 _userId = fakerator.names.name();
                 localStorage.setItem("userId", _userId);
                 socket.emit(CLIENT_CONSTS.SIGN_IN, _userId);
-
               }
             });
 
@@ -150,13 +147,19 @@
               showChatMsgAsStandard('#messages', msg, user, _userId);
             });
             
-            socket.on(CLIENT_CONSTS.SIGN_IN, function(user, msg, users) {
+            socket.on(CLIENT_CONSTS.SIGN_IN, function(userObj, msg, users) {
+              console.log('--------' + CLIENT_CONSTS.SIGN_IN + '------------');
+              console.log(userObj);
+
               refreshUserListWithNewData('#users', users);
               showChatMsgAsNotification('#messages', msg);
-              initWelcomeText('#welcome', user);
+              if (_userId == userObj.name) {
+                initWelcomeText('#welcome', _userId + ' (' + userObj.userType + ')');
+              }
             });
 
             socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
+              console.log('--------' + CLIENT_CONSTS.INIT + '------------');
               initWelcomeText('#welcome', _userId);
               refreshUserListWithNewData('#users', users);
             });

@@ -15,7 +15,6 @@ app.get('/', function(req, res){
 
 var userFactory = require('./User');
 
-
 function isString(data) {
     return ((typeof data === 'string') ||  (data instanceof String));
 }
@@ -28,14 +27,17 @@ function isString(data) {
 io.on('connection', function(socket) {
 
     socket.on('user-exists', function(userId) {
-        console.log('USER-EXISTS ----------------> ');
-        var isFound = users.searchUserByUserName(userId) ? true : false;
-        console.log('server: user-exists, ' + isFound);
-        socket.emit('is-user-found', isFound, users.flatten());
+        var foundUser = users.searchUserByUserName(userId);
+        if (foundUser) {
+            console.log('----- - - - - - ');
+            console.dir(foundUser.data);
+            console.dir(foundUser.data.constructor.name);
+        }
+     
+        socket.emit('is-user-found', foundUser, users.flatten());
     });
 
     socket.on('user-disconnect', function(userId){
-        console.log('USER-DISCONNECT ----------------> ');
         socket.disconnect(true);
         if (users.removeUserByUserName(userId)) {
             console.log('server removed user ' + userId);
@@ -61,16 +63,24 @@ io.on('connection', function(socket) {
         console.log('server: sign in user ' + userID);
         if (isString(userID)) {
             var searchResult = users.searchUserByUserName(userID);
+           
             if (searchResult) {
+                console.log('-----------> user found √');
+                console.log(searchResult);
+
                 console.log('(+) signing in ' + userID);
-                io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
+                io.emit(CONSTANTS.SIGN_IN, searchResult, userID + ' signed in', users.flatten());
             } else {
                 console.log(userID + ', does not exist..., we will insert ' + userID);
-                var aUser = userFactory.user.createUser(new String(userID), "my pwd");
+
+                var aUser = (Math.random() > 0.5) ? userFactory.user.createUser(new String(userID), "my pwd") : userFactory.admin.createAdmin(new String(userID), "my pwd");
                 users.insertUser(aUser);
-                console.log('(+) signing in ' + userID);
+                console.log('(+) signing in ' + aUser.name);
                 users.print();
-                io.emit(CONSTANTS.SIGN_IN, userID, userID + ' signed in', users.flatten());
+                console.log(aUser);
+                console.log(aUser.constructor.name);
+                
+                io.emit(CONSTANTS.SIGN_IN, aUser, userID + ' signed in', users.flatten());
             }
         }
     });
