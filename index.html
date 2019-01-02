@@ -38,7 +38,9 @@
     <title>Ricky's Chatroom</title>
   </head>
   <body>
+    <div id="navigation">
       <button type="button" id="disconnect" class="btn btn-danger">disconnect</button>
+    </div>
 
     <div class="box">
       <ul id="messages" class="list-group list-group-flush"></ul>
@@ -148,22 +150,19 @@
             });
             
             socket.on(CLIENT_CONSTS.SIGN_IN, function(userObj, msg, users) {
-              console.log('--------' + CLIENT_CONSTS.SIGN_IN + '------------');
-              console.log(userObj);
-
               refreshUserListWithNewData('#users', users);
               showChatMsgAsNotification('#messages', msg);
               if (_userId == userObj.name) {
                 initWelcomeText('#welcome', _userId + ' (' + userObj.userType + ')');
+                if (userObj.userType == 'User') {console.log(userObj.name + " is a user");}
+                if (userObj.userType == 'Admin') {console.log(userObj.name + " is an admin");}
               }
             });
 
             socket.on(CLIENT_CONSTS.INIT, function(users, rooms) {
-              console.log('--------' + CLIENT_CONSTS.INIT + '------------');
               initWelcomeText('#welcome', _userId);
               refreshUserListWithNewData('#users', users);
             });
-
         });
 
     </script>
