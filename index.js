@@ -15,6 +15,21 @@ app.get('/', function(req, res){
 
 var userFactory = require('./User');
 
+// var temp = userFactory.admin.createAdmin('ricky', 'hahah');
+// console.log(temp);
+// console.log(temp.__proto__);
+// console.log(temp.__proto__.__proto__);
+// console.log(temp.__proto__.__proto__.__proto__);
+
+var a = function() {
+    console.log('ahah');
+}
+
+console.log(a);
+console.log(a.prototype);
+console.log(a.__proto__);
+console.log(a.__proto__.__proto__);
+
 function isString(data) {
     return ((typeof data === 'string') ||  (data instanceof String));
 }
@@ -26,7 +41,7 @@ function isString(data) {
 // It will always give us a callback for what we want to do after the event.
 io.on('connection', function(socket) {
     socket.on('user-exists', function(userId) {
-        users.searchUserByUserName(userId);
+        var foundUser = users.searchUserByUserName(userId);
         socket.emit('is-user-found', foundUser, users.flatten());
     });
 
