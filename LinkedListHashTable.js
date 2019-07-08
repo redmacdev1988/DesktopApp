@@ -1,6 +1,123 @@
 var USER = require("./User");
 var MAX = 8;
 
+// must use stack
+
+const STACK_EMPTY = 'empty';
+
+function Stack() {
+    // public this object
+    this.data = [];
+    this.cur = 0;
+}
+
+Stack.prototype.push = function(ch) {
+    this.data[this.cur++] = ch;
+}
+
+Stack.prototype.isEmpty = function() {
+    return this.cur === 0;
+}
+
+Stack.prototype.pop = function() {
+    if (this.isEmpty()) {
+        return STACK_EMPTY;
+    }
+    return this.data[--this.cur];
+}
+
+Stack.prototype.count = function() {
+    return this.cur;
+}
+
+
+
+function convertASCIIto8BitBinary(asciiValue, resultArr) {
+    let division = asciiValue;
+    for ( let i = 7; i >= 0; i--) {
+        resultArr[i] = division % 2;
+        division = Math.floor(division / 2);
+    }
+    return resultArr;
+}
+
+
+function charToBinary(ch) {
+    try {
+        if ((typeof ch === 'string') && (ch.length === 1)) {
+            console.log(`√ ${ch} is a character`);
+
+            let asciiValue = ch.charCodeAt(0);
+
+            // return an array of 8 bits all filled
+            return convertASCIIto8BitBinary(asciiValue, [8]);
+    
+        } else throw new Error(" wrong input "); 
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+function eightBitBinaryToBase64(arrOfBits) {
+
+    // 1) we get an array of bits  100010101110101
+    let numOfSixBits = Math.ceil(arrOfBits.length/6);
+
+    // 2) we split them into 6's  000100 010101 110101
+    // so I need numOfSixBits arrays
+    var arr = [];
+
+    for (let j = 0; j < numOfSixBits; j++) {
+        arr[j] = new Array();
+    }
+
+    let bitStack = new Stack();
+    for (let i = 0; i < arrOfBits.length; i++) {
+        bitStack.push(arrOfBits[i]);
+    }
+
+    let data;
+    let arrIndex = numOfSixBits-1;
+    let i = 5;
+    do {
+        data = bitStack.pop();
+        if (data === STACK_EMPTY) {break;}
+        arr[arrIndex][i--] = data;
+        if (i < 0) { // reset
+            arrIndex--;
+            i = 5;
+        }
+    } while (arrIndex > -1 && data !== STACK_EMPTY);
+
+    for (let z = 0; z <= i; z++) {
+        arr[arrIndex][z] = 0;
+    }
+
+
+    //  3) convert these 6 bits into base 64 characters
+
+}
+
+//{"alg
+let r1 = charToBinary('{');
+let r2 = charToBinary('"');
+let r3 = charToBinary('a');
+let r4 = charToBinary('l');
+let r5 = charToBinary('g');
+
+console.log(`${r1}    ${r2}     ${r3}     ${r4}     ${r5}`);
+
+
+let result = r1.concat(r2, r3, r4, r5);
+
+eightBitBinaryToBase64(result);
+
+// charToBinary('a');
+// charToBinary('n');
+
+
 function Node (newData, newNext) {
     //The 'this' keyword will refer to the new instance that is created
     // these properties are tied to each instance
@@ -189,3 +306,6 @@ module.exports = (function HashTable() {
     };
 
 })();
+
+
+

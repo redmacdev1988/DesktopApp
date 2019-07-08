@@ -4,31 +4,19 @@ var CONSTANTS = require("./constants");
 var users = require('./LinkedListHashTable');
 console.log('index.js - √ users created');
 
+var userFactory = require('./User');
+console.log('index.js - √ userFactory created');
+
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+console.log(`index.js - √ socket io and express initialized`);
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
-  //res.sendFile(__dirname + '/start.html');
 });
 
-var userFactory = require('./User');
 
-// var temp = userFactory.admin.createAdmin('ricky', 'hahah');
-// console.log(temp);
-// console.log(temp.__proto__);
-// console.log(temp.__proto__.__proto__);
-// console.log(temp.__proto__.__proto__.__proto__);
-
-var a = function() {
-    console.log('ahah');
-}
-
-console.log(a);
-console.log(a.prototype);
-console.log(a.__proto__);
-console.log(a.__proto__.__proto__);
 
 function isString(data) {
     return ((typeof data === 'string') ||  (data instanceof String));
