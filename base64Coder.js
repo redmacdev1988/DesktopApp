@@ -1,14 +1,14 @@
-var stackFactory = require("./Stack");
 
 function base64Coder() {
-
 }
 
-
-base64Coder.prototype.constant = "HAHAHAHHA";
-base64Coder.prototype.encode = function() {
-}
-base64Coder.prototype.decode = function() {
+base64Coder.prototype.encode = function(input) {
+    let allArraysOf8bits = new Array();
+    for (let i = 0; i < input.length; i++) {
+        let tmpArr = this.charToBinary(input[i]);
+        allArraysOf8bits = allArraysOf8bits.concat(tmpArr);
+    }
+    return this.eightBitBinaryToBase64(allArraysOf8bits);
 }
 
 base64Coder.prototype.convertASCIIto8BitBinary = function(asciiValue) {
@@ -18,35 +18,27 @@ base64Coder.prototype.convertASCIIto8BitBinary = function(asciiValue) {
         resultArr[i] = division % 2;
         division = Math.floor(division / 2);
     }
-    console.log(`ascii value ${asciiValue} in binary is:`);
-    console.log(resultArr);
     return resultArr;
 }
 
 base64Coder.prototype.charToBinary = function(ch) {
     try {
         if ((typeof ch === 'string') && (ch.length === 1)) {
-            let asciiValue = ch.charCodeAt(0);
-            console.log(`√ ${ch} is a character, with an ascii value of ${asciiValue}`);
-            return this.convertASCIIto8BitBinary(asciiValue);
-        } else throw new Error(" wrong input "); 
-    } catch (error) {
-        console.log(error);
-    }
+            return this.convertASCIIto8BitBinary(ch.charCodeAt(0));
+        } else throw new Error("wrong input"); 
+    } catch (error) { console.log(error); }
 }
 
 base64Coder.prototype.sixBitBinaryToNumber = function(arr) {
     let exp = 5;
     let total = 0;
-    for(let i = 0; i < 6; i++) {
-        total += arr[i] * Math.pow(2, exp--);
+    for(let i = 0; i < 6; i++) { 
+        total += arr[i] * Math.pow(2, exp--); 
     }
-    console.log(`converted 6-bit binary ${arr} to value ${total}`);
     return total;
 }
 
 base64Coder.prototype.convertNumberToBase64Char = function(num) {
-    //console.log(`converting a ${typeof num}  ${num} to base64`);
     if (num >= 0 && num <= 25 ) { // A to Z
         // ascii 65 - 90
         return String.fromCharCode(num+65);
@@ -74,71 +66,36 @@ function createEmpty6BitArrays(number) {
     return arr;
 }
 
-function createStackInitWithData(arr) {
-    let bitStack = stackFactory();
-    for (let i = 0; i < arr.length; i++) {
-        bitStack.push(arr[i]);
+function create6BitsFrom8Bits_startingFromLeft(arrOfBits, arrayOf6BitWord) {
+    let wordIndex = -1;
+    console.log(arrOfBits.length);
+    for (let i = 0; i < arrOfBits.length; i++) {
+        if (i % 6 === 0) wordIndex++;
+        arrayOf6BitWord[wordIndex].push(arrOfBits[i]);
     }
-    return bitStack;
+
+    for (let z = arrayOf6BitWord[wordIndex].length; z < 6; z++ ) {
+        arrayOf6BitWord[wordIndex].push(0);
+    }
+    return arrayOf6BitWord;
 }
 
-function create6BitsFrom8Bits() {
-
+base64Coder.prototype.convert6BitArrayToChars = function(arrayOf6BitWord) {
+    let base64Results = '';
+    for (let a = 0; a < arrayOf6BitWord.length; a++) {
+        let result = this.convertNumberToBase64Char(this.sixBitBinaryToNumber(arrayOf6BitWord[a]));
+        base64Results += result;
+    }
+    return base64Results;
 }
 
 base64Coder.prototype.eightBitBinaryToBase64 = function(arrOfBits) {
-
-    let numOf6Bits = numOf6BitsFromAllBits(arrOfBits);
-    let arr = createEmpty6BitArrays(numOf6Bits);
-    let bitStack = createStackInitWithData(arrOfBits);
-
-
-    // 4) pop them into the empty arrays
-    let data;
-    let arrIndex = numOf6Bits-1;
-    let i = 5;
-    do {
-        data = bitStack.pop();
-        if (data === bitStack.STACK_EMPTY) {break;}
-        arr[arrIndex][i--] = data;
-        if (i < 0) { // reset
-            arrIndex--;
-            i = 5;
-        }
-    } while (arrIndex > -1 && data !== bitStack.STACK_EMPTY);
-
-    if (arrIndex > -1) {
-        // 5) fill out remaining with 0's
-        for (let z = 0; z <= i; z++) { arr[arrIndex][z] = 0; }
-    }
-
-    console.log(`converted ${arrOfBits} to: `);
-
-    for (let a = 0; a < numOfBase64; a++) {
-        console.log(arr[a]);
-    }
-
-    let base64Results = '';
-    //  6) convert these 6 bits into base 64 characters
-    for (let a = 0; a < numOfBase64; a++) {
-        let result = this.convertNumberToBase64Char(this.sixBitBinaryToNumber(arr[a]));
-        console.log(`${arr[a]} becomes ${result}`);
-        // convert each arr[a] into a character
-        base64Results += result;
-    }
-    console.log(base64Results);
+    let numOf6BitWord = numOf6BitsFromAllBits(arrOfBits);
+    let arr = createEmpty6BitArrays(numOf6BitWord);
+    arr = create6BitsFrom8Bits_startingFromLeft(arrOfBits, arr);
+    return this.convert6BitArrayToChars(arr);
 }
 
-
-//https://www.base64encoder.io/
-
-
-let m = new base64Coder();
-
-let r1 = m.charToBinary('M');
-let r2 = m.charToBinary('a');
-let r3 = m.charToBinary('n');
-
-let result = r1.concat(r2, r3);
-console.log(`all binaries together: ${result}`);
-m.eightBitBinaryToBase64(result);
+let m =  new base64Coder();
+let result = m.encode('{"alg');
+console.log(result);
