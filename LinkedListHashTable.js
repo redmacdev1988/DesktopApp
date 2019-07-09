@@ -38,6 +38,8 @@ function convertASCIIto8BitBinary(asciiValue, resultArr) {
         resultArr[i] = division % 2;
         division = Math.floor(division / 2);
     }
+    console.log(`ascii value ${asciiValue} in binary is:`);
+    console.log(resultArr);
     return resultArr;
 }
 
@@ -45,13 +47,9 @@ function convertASCIIto8BitBinary(asciiValue, resultArr) {
 function charToBinary(ch) {
     try {
         if ((typeof ch === 'string') && (ch.length === 1)) {
-            console.log(`√ ${ch} is a character`);
-
             let asciiValue = ch.charCodeAt(0);
-
-            // return an array of 8 bits all filled
+            console.log(`√ ${ch} is a character, with an ascii value of ${asciiValue}`);
             return convertASCIIto8BitBinary(asciiValue, [8]);
-    
         } else throw new Error(" wrong input "); 
 
     } catch (error) {
@@ -60,26 +58,54 @@ function charToBinary(ch) {
 }
 
 
+function sixBitToNumeric(arr) {
+    let exp = 5;
+    let total = 0;
+    for(let i = 0; i < 6; i++) {
+        total += arr[i] * Math.pow(2, exp--);
+    }
+    console.log(`converted 6-bit binary ${arr} to value ${total}`);
+    return total;
+}
+
+function converNumericToBase64(num) {
+    //console.log(`converting a ${typeof num}  ${num} to base64`);
+    if (num >= 0 && num <= 25 ) { // A to Z
+        // ascii 65 - 90
+        return String.fromCharCode(num+65);
+    } else if (num >= 26 && num <= 51 ) { // a to z
+        // ascii 97 - 122
+        return String.fromCharCode(num+71);
+    } else if (num >= 52 && num <= 61 ) { // 0 to 9
+        // ascii 48 - 57
+        return String.fromCharCode(num-4);
+    } else if (num == 62) { // + 
+        return String.fromCharCode(43);
+    } else if (num == 63) { // /
+        return String.fromCharCode(47);
+    }
+    return 'ERROR';
+}
+
+
 function eightBitBinaryToBase64(arrOfBits) {
 
     // 1) we get an array of bits  100010101110101
-    let numOfSixBits = Math.ceil(arrOfBits.length/6);
+    let numOfBase64 = Math.ceil(arrOfBits.length/6);
 
-    // 2) we split them into 6's  000100 010101 110101
-    // so I need numOfSixBits arrays
+    // 2) create empty arrays
     var arr = [];
+    for (let j = 0; j < numOfBase64; j++) { arr[j] = new Array(); }
 
-    for (let j = 0; j < numOfSixBits; j++) {
-        arr[j] = new Array();
-    }
-
+    // 3) create stack and push all bits into it
     let bitStack = new Stack();
     for (let i = 0; i < arrOfBits.length; i++) {
         bitStack.push(arrOfBits[i]);
     }
 
+    // 4) pop them into the empty arrays
     let data;
-    let arrIndex = numOfSixBits-1;
+    let arrIndex = numOfBase64-1;
     let i = 5;
     do {
         data = bitStack.pop();
@@ -91,32 +117,44 @@ function eightBitBinaryToBase64(arrOfBits) {
         }
     } while (arrIndex > -1 && data !== STACK_EMPTY);
 
-    for (let z = 0; z <= i; z++) {
-        arr[arrIndex][z] = 0;
+    console.log(`i is ${i} arrIndex is ${arrIndex}`);
+
+    if (arrIndex > -1) {
+        // 5) fill out remaining with 0's
+        for (let z = 0; z <= i; z++) { arr[arrIndex][z] = 0; }
     }
 
+    console.log(`converted ${arrOfBits} to: `);
 
-    //  3) convert these 6 bits into base 64 characters
+    for (let a = 0; a < numOfBase64; a++) {
+        console.log(arr[a]);
+    }
 
+    
+    let base64Results = '';
+    //  6) convert these 6 bits into base 64 characters
+    for (let a = 0; a < numOfBase64; a++) {
+        let result = converNumericToBase64(sixBitToNumeric(arr[a]));
+        console.log(`${arr[a]} becomes ${result}`);
+        // convert each arr[a] into a character
+        base64Results += result;
+    }
+
+    console.log(base64Results);
 }
 
+//https://www.base64encoder.io/
+
 //{"alg
-let r1 = charToBinary('{');
-let r2 = charToBinary('"');
-let r3 = charToBinary('a');
-let r4 = charToBinary('l');
-let r5 = charToBinary('g');
-
-console.log(`${r1}    ${r2}     ${r3}     ${r4}     ${r5}`);
-
+let r1 = charToBinary('r');
+let r2 = charToBinary('i');
+let r3 = charToBinary('c');
+let r4 = charToBinary('k')
+let r5 = charToBinary('y');
 
 let result = r1.concat(r2, r3, r4, r5);
-
+console.log(`all binaries together: ${result}`);
 eightBitBinaryToBase64(result);
-
-// charToBinary('a');
-// charToBinary('n');
-
 
 function Node (newData, newNext) {
     //The 'this' keyword will refer to the new instance that is created
