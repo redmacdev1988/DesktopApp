@@ -1,5 +1,4 @@
 var USER = require("./User");
-var stackFactory = require("./Stack");
 
 var MAX = 8;
 

@@ -1,8 +1,11 @@
 
-function base64Coder() {
-}
+function base64Coder() {}
 
 base64Coder.prototype.encode = function(input) {
+
+    //console.log(`base64Coder encode `);
+    //console.log(input);
+
     let allArraysOf8bits = new Array();
     for (let i = 0; i < input.length; i++) {
         let tmpArr = this.charToBinary(input[i]);
@@ -48,9 +51,9 @@ base64Coder.prototype.convertNumberToBase64Char = function(num) {
     } else if (num >= 52 && num <= 61 ) { // 0 to 9
         // ascii 48 - 57
         return String.fromCharCode(num-4);
-    } else if (num == 62) { // + 
-        return String.fromCharCode(43);
-    } else if (num == 63) { // /
+    } else if (num == 62) { // + (43), for url safe use '-' (45)
+        return String.fromCharCode(45);
+    } else if (num == 63) { // / (47), for url safe use '_' (95)
         return String.fromCharCode(47);
     }
     return 'ERROR';
@@ -67,13 +70,15 @@ function createEmpty6BitArrays(number) {
 }
 
 function create6BitsFrom8Bits_startingFromLeft(arrOfBits, arrayOf6BitWord) {
+    //console.log(arrOfBits);
     let wordIndex = -1;
-    console.log(arrOfBits.length);
+    //console.log(arrOfBits.length);
     for (let i = 0; i < arrOfBits.length; i++) {
         if (i % 6 === 0) wordIndex++;
         arrayOf6BitWord[wordIndex].push(arrOfBits[i]);
     }
 
+    console.log('wordIndex: ' + wordIndex);
     for (let z = arrayOf6BitWord[wordIndex].length; z < 6; z++ ) {
         arrayOf6BitWord[wordIndex].push(0);
     }
@@ -96,6 +101,10 @@ base64Coder.prototype.eightBitBinaryToBase64 = function(arrOfBits) {
     return this.convert6BitArrayToChars(arr);
 }
 
-let m =  new base64Coder();
-let result = m.encode('{"alg');
-console.log(result);
+// let m =  new base64Coder();
+// let result = m.encode('{"alg');
+// console.log(result);
+
+module.exports = function factoryBase64Coder() {
+    return new base64Coder();
+}
