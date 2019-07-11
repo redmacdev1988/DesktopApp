@@ -2,10 +2,6 @@
 function base64Coder() {}
 
 base64Coder.prototype.encode = function(input) {
-
-    //console.log(`base64Coder encode `);
-    //console.log(input);
-
     let allArraysOf8bits = new Array();
     for (let i = 0; i < input.length; i++) {
         let tmpArr = this.charToBinary(input[i]);
@@ -13,6 +9,15 @@ base64Coder.prototype.encode = function(input) {
     }
     return this.eightBitBinaryToBase64(allArraysOf8bits);
 }
+
+base64Coder.prototype.encode = function(base64String) {
+
+    // 1) given a base 64 string, we first have to reverse it to a numeric
+
+    // 2) given a
+
+}
+
 
 base64Coder.prototype.convertASCIIto8BitBinary = function(asciiValue) {
     let resultArr = [8];
