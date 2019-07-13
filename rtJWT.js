@@ -1,6 +1,6 @@
 var b64Coder = require("./base64Coder");
 var CryptoJS = require('crypto-js');
-var SECRET_KEY = 'your-256-bit-secret';
+var SECRET_KEY = 'HOHOHO';
 
 //crypto-js/hmac-sha256
 function rtJWT() {
@@ -15,75 +15,51 @@ rtJWT.prototype.sign = function(payload, secret) {
   let encodedHeader = this.b64Coder.encode(header);
   let encodedPayload = this.b64Coder.encode(payload);
   let encodedMessage = encodedHeader + '.' + encodedPayload;
-
-  //var signature = crypto.createHmac('sha256', secret).update(encodedMessage).digest('base64');
-  var hash = CryptoJS.HmacSHA256(encodedMessage, secret);
+  var hash = CryptoJS.HmacSHA256(encodedMessage, secret); // hash is an object
   let token = encodedHeader + '.' + encodedPayload + '.' + hash;
   return token;
 }
 
-function doesItMatch(client, server) {
-  console.log('---- does it match -----');
-  console.log(`client length - ${client.length}, server length - ${server.length}`);
-
-
-  if (client.length === server.length) {
-    for( let i = 0; i < client.length; i++) {
-      if (client[i] !== server[i]) {
-        console.log(`uh oh, error at index ${i}, values ${client[i]}, ${server[i]}`);
-        return false;
-      }
-    }
-    // 
-    return true;
-  }
-  return false;
+function removeHiddenAndSpecialChars(str) {
+  str = str.replace(/\\n/g, "\\n")  
+               .replace(/\\'/g, "\\'")
+               .replace(/\\"/g, '\\"')
+               .replace(/\\&/g, "\\&")
+               .replace(/\\r/g, "\\r")
+               .replace(/\\t/g, "\\t")
+               .replace(/\\b/g, "\\b")
+               .replace(/\\f/g, "\\f");
+  // remove non-printable and other non-valid JSON chars
+  str = str.replace(/[\u0000-\u0019]+/g,""); 
+  return str;
 }
+
 rtJWT.prototype.verify = function(token, callback) {
   let base64Array = token.split('.');
-
   let encodedHeader = base64Array[0];
   let encodedPayload = base64Array[1];
   let signature = base64Array[2];
-  console.log(`client signature - |${signature}|`);
-  
-
   let header = this.b64Coder.decode(encodedHeader);
   let obj = JSON.parse(header);
-
-  let serverSignature;
-
   if (obj.alg === 'HS256' && obj.typ === 'JWT') {
-
-    serverSignature = CryptoJS.HmacSHA256(encodedHeader + '.' + encodedPayload, SECRET_KEY);
-    //serverSignature = crypto.createHmac('sha256', SECRET_KEY).update(encodedHeader + '.' + encodedPayload).digest('base64');
-    console.log(`\nserverSignature - |${serverSignature}|`);
-
-    console.log(`${typeof signature}, ${typeof serverSignature}`);
-    
-    console.log(`${signature.length}, ${serverSignature.length}`);
-
-    if (signature === serverSignature) {
-      console.log('oh yea');
+    let serverSignature = CryptoJS.HmacSHA256(encodedHeader + '.' + encodedPayload, SECRET_KEY).toString();
+    if (serverSignature === signature) {
+      let payload = this.b64Coder.decode(encodedPayload)
+      let payloadObj = JSON.parse(removeHiddenAndSpecialChars(payload));
+      callback(payloadObj, null);
     } else {
-      console.log('oh no');
+      callback(null, new Error('Sorry, signatures do not match.'));
     }
-    /*
-    if (doesItMatch(clientSignature, serverSignature)) {
-      console.log(`-- its a match --`);
-      callback(this.b64Coder.decode(encodedPayload), null);
-    } else {
-      console.log(' --- uh no match ----');
-    }
-    */
   }
-  callback(false, new Error('does not match'));
+  callback(null, new Error('Sorry, no support for hash ' + obj.alg + ', and/or ' + obj.typ));
 }
 
 let m = new rtJWT();
 let token = m.sign(payload, SECRET_KEY);
-console.log('token is: ' + token);
 
 m.verify(token, function(payload, error) {
-
+  if(!error) {
+    console.log('payload received:');
+    console.log(payload);
+  }
 });
