@@ -18,6 +18,7 @@ base64Coder.prototype.decode = function(base64String) {
     for (let i = 0; i < storage.length; i++) {
         let value = this.convert8BitsIntoChar(storage[i]);
         let temp = this.convertNumberToASCII(value);
+        //console.log(`${value} --> ${temp}`);
         result += temp;
     }
     return result;
@@ -136,7 +137,7 @@ base64Coder.prototype.convertNumberToBase64Char = function(num) {
     } else if (num == 62) { // + (43), for url safe use '-' (45)
         return String.fromCharCode(45);
     } else if (num == 63) { // / (47), for url safe use '_' (95)
-        return String.fromCharCode(47);
+        return String.fromCharCode(95);
     }
     return 'ERROR';
 }
