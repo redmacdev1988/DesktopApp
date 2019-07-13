@@ -54,8 +54,21 @@ rtJWT.prototype.verify = function(token, callback) {
   callback(null, new Error('Sorry, no support for hash ' + obj.alg + ', and/or ' + obj.typ));
 }
 
+/*
 let m = new rtJWT();
 let token = m.sign(payload, SECRET_KEY);
+
+m.verify(token, function(payload, error) {
+  if(!error) {
+    console.log('payload received:');
+    console.log(payload);
+  }
+});
+*/
+
+// const payload = `{"sub":"88665676680","name":"Ricky Tsao","iat":1516239022}`;
+let m = new rtJWT();
+let token = m.sign(`{"id":"12345678"}`, SECRET_KEY);
 
 m.verify(token, function(payload, error) {
   if(!error) {
